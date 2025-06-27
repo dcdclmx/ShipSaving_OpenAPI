@@ -1,0 +1,1159 @@
+openapi: 3.0.3
+info:
+  title: ShipSaving Open API
+  version: "2.1"
+  description: |
+
+servers:
+  - url: https://api.shipsaving.com
+    description: Production server
+  - url: https://api.shipsaving.us
+    description: Sandbox server
+
+security:
+  - ApiTokenAuth: []
+
+paths:
+  /api/rates/list:
+    post:
+      tags:
+      - Label Purchase
+      summary: Retrieve shipping rates for a given package and address.
+      description: >
+        **API usage limit:** 900 requests per minute.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/ShipmentRequest'
+                 
+      responses:
+        '200':
+          description: Rate list retrieved successfully
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/RatingResponse'
+                
+        '400':
+          description: Error retrieving rates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
+  /api/rates/buy:
+    get:
+      tags: 
+      - Label Purchase
+      summary: Purchase shipping label
+      description: Purchase a shipping label based on the provided rate ID.
+      operationId: purchaseLabel
+      parameters:
+        - name: rate_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the shipping rate.
+      responses:
+        # '200':
+        #   description: Label successfully purchased.
+        #   content:
+        #     application/json:
+        #       schema:
+        #         $ref: '#/components/schemas/PurchaseLabelResponse'
+        '400':
+          description: Invalid request or missing parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
+  /api/rates/buy-label:
+    post:
+      tags: 
+        - Label Purchase
+      summary: Directly Buy Label
+      description: >
+        Purchases a shipping label directly without comparing multiple carrier options.
+        This endpoint is applicable only when there is a single carrier configured for each carrier type in the user's account.
+        If multiple carriers of the same type exist, use the Check Label Pricing List API to retrieve options, then call the Purchase Label API to complete the purchase.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipmentRequest'  # 假设你已将 requestBody 抽成了通用 schema
+      responses:
+        # '200':
+        #   description: Label successfully purchased
+        #   content:
+        #     application/json:
+        #       schema:
+        #         $ref: '#/components/schemas/PurchaseLabelResponse'
+
+
+  /api/shipments/void:
+    post:
+      summary: Void Label
+      description: >
+        Voids a purchased shipping label using the shipment’s tracking number.
+      tags:
+        - Label Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tracking_code
+              properties:
+                tracking_code:
+                  type: string
+                  description: Shipment tracking number
+            example:
+              tracking_code: "9435811899562089111300"
+      responses:
+        '200':
+          description: Label voided successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tracking_code:
+                    type: string
+                    description: The tracking number of the voided label
+              example:
+                tracking_code: "9435811899562089111300"
+
+  /api/orders/create:
+    post:
+      summary: Create Orders
+      description: |
+        Creates a new order in the ShipSaving system. Typically used to pre-create orders before generating shipping labels.
+      tags:
+        - Order Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          description: Order successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order_number:
+                    type: string
+                    description: Order number
+        '400':
+          $ref: "#/components/responses/BadRequestErrorResponse"
+
+  /api/shipments/get:
+    get:
+      summary: Check Order Labels
+      description: >
+        Retrieves the shipment label details for a specified store and order number. Applicable only to orders with a purchased shipping label.
+      tags:
+        - Order Management
+      parameters:
+        - name: store_name
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Store name in the ShipSaving system
+        - name: order_number
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Order number associated with the purchased label
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    packing_slip_number:
+                      type: integer
+                      description: Packing slip number
+                      example: 100108
+                    carrier:
+                      type: string
+                      description: Carrier's name
+                      example: UPS
+                    predefined_package:
+                      type: string
+                      description: Carrier’s predefined packaging type
+                      example: ""
+                    service_level:
+                      type: string
+                      description: Carrier service type
+                      example: ups_ground
+                    tracking_code:
+                      type: string
+                      description: Tracking number
+                      example: 1ZXXXXXXXXXXXXXXXX
+                    length:
+                      type: number
+                      format: float
+                      description: Package length (inch)
+                      example: 6
+                    width:
+                      type: number
+                      format: float
+                      description: Package width (inch)
+                      example: 6
+                    height:
+                      type: number
+                      format: float
+                      description: Package height (inch)
+                      example: 6
+                    weight:
+                      type: number
+                      format: float
+                      description: Package weight (lb)
+                      example: 1
+                    rate:
+                      type: number
+                      format: float
+                      description: Shipping rate
+                      example: 5.99
+                    service_fee:
+                      type: number
+                      format: float
+                      description: System service fee
+                      example: 0.05
+                    label_width:
+                      type: number
+                      format: float
+                      description: Label width (inch)
+                      example: 4
+                    label_height:
+                      type: number
+                      format: float
+                      description: Label height (inch)
+                      example: 6
+                    label_urls:
+                      type: array
+                      items:
+                        type: string
+                        example: https://…/labels/2024-10-23/9524d5ac21a744a1954e16ebda769772_0.png
+                      description: List of image URLs for shipping labels
+
+                    commercial_invoice_urls:
+                      type: array
+                      items:
+                        type: string
+                      description: List of image URLs for commercial invoices (U.S. Letter)
+                      example: null
+        '400':
+          $ref: "#/components/responses/BadRequestErrorResponse"
+
+  /api/orders/delete:
+    delete:
+      summary: Delete an order
+      description: >
+        Deletes an existing order from the ShipSaving system by specifying both the store name and order number. This action is irreversible and will permanently remove the order and its associated data.
+      tags:
+        - Order Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - store_name
+                - order_number
+              properties:
+                store_name:
+                  type: string
+                  description: The store name associated with the order.
+                  example: "xxx 3C Store"
+                order_number:
+                  type: string
+                  description: Unique identifier of the order to be deleted.
+                  example: "20240201125047532"
+      responses:
+        '200':
+          description: Order deleted successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {}
+              example: []
+        '400':
+          description: Error occurred while deleting order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
+              example:
+                message: "Invalid order number or store name"
+
+  /api/addresses/verify:
+    post:
+      summary: Address Verification
+      description: |
+        Verifies and standardizes an address based on the provided details.
+        This API checks for errors and returns suggestions or corrections.
+      tags:
+        - Address Verification
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - street
+                - city
+                - zip
+                - country
+                - state
+              properties:
+                street:
+                  $ref: '#/components/schemas/street'
+                street2:
+                  $ref: '#/components/schemas/street2'
+                city:
+                  $ref: "#/components/schemas/city"
+                state:
+                  $ref: "#/components/schemas/state"
+                zip:
+                  $ref: "#/components/schemas/zipcode"
+                country:
+                  $ref: '#/components/schemas/country'
+      responses:
+        '200':
+          description: Address verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  street:
+                    $ref: '#/components/schemas/street'
+                  street2:
+                    $ref: '#/components/schemas/street2'
+                  city:
+                    $ref: "#/components/schemas/city"
+                  state:
+                    $ref: "#/components/schemas/state"
+                  zip:
+                    $ref: "#/components/schemas/zipcode"
+                  country:
+                    $ref: '#/components/schemas/country'
+                  residential:
+                    type: boolean
+                    example: true
+                  errored:
+                    type: boolean
+                    description: Whether the address has an error
+                  corrected:
+                    type: boolean
+                    description: Whether the address was corrected
+                  standardized:
+                    type: boolean
+                    description: Whether the address was standardized
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          example: "ADDRESS.PRIMARY.INVALID"
+                        message:
+                          type: string
+                          example: "Primary number invalid."
+                  corrections:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          example: "ADDRESS.COMPONENT.CHANGED"
+                        message:
+                          type: string
+                          example: "An address component (i.e., directional or suffix only) was changed"
+
+  /api/shipments/scan-forms/create:
+    post:
+      tags:
+        - SCAN Form
+      summary: Create USPS SCAN Form
+      description: |
+        Creates a USPS SCAN Form for the provided list of shipment tracking codes. 
+        Only applicable to shipments with valid USPS tracking numbers.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tracking_codes:
+                  type: array
+                  items:
+                    type: string
+                  description: List of shipment tracking codes
+              required:
+                - tracking_codes
+            example:
+              tracking_codes:
+                - "9434611899562089592093"
+                - "9434611899562089592048"
+      responses:
+        "200":
+          $ref: "#/components/responses/ScanFormSuccessResponse"
+        "400":
+          $ref: "#/components/responses/SCANFormErrorResponse"
+
+  /api/shipments/scan-forms/dhl/ecommerce/create:
+    post:
+      tags:
+        - SCAN Form
+      summary: Create DHL eCommerce SCAN Form
+      description: >
+        Initiates the asynchronous creation of a DHL eCommerce SCAN Form. Returns a request ID that can be used with the Get DHL eCommerce SCAN Form endpoint to retrieve the final manifest PDF.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tracking_codes:
+                  type: array
+                  items:
+                    type: string
+                  description: List of shipment tracking codes
+              required:
+                - tracking_codes
+            example:
+              tracking_codes:
+                - "40EB09B82E1146DE9166C499A0B4EA"
+                - "40EB09B82E1146DE9166C499A0B4DD"
+              
+      responses:
+        '200':
+          description: SCAN Form request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  request:
+                    type: integer
+                    description: Request ID for fetching the manifest later
+              examples:
+                success-response:
+                  value:
+                    request: 202
+        '400':
+          $ref: "#/components/responses/SCANFormErrorResponse"
+
+  /api/shipments/scan-forms/dhl/ecommerce/get:
+    get:
+      tags:
+        - SCAN Form
+      summary: Get DHL eCommerce SCAN Form
+      description: >
+        Returns the DHL eCommerce SCAN Form PDF URL based on the request ID from the creation endpoint.
+      parameters:
+        - name: request_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Request ID returned from the Create SCAN Form API
+      responses:
+        '200':
+          $ref: "#/components/responses/ScanFormSuccessResponse"
+        '400':
+          description: Bad Request - Invalid token or request ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
+              example:
+                message: "Invalid request_id or token."
+
+  /api/carrier-account/list:
+    get:
+      summary: Get Carrier Account List
+      description: |
+        Retrieves the list of carrier accounts associated with the authenticated API token.
+      tags:
+        - Carrier Management
+      responses:
+        '200':
+          description: Successful response with list of carrier accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      description: The name of the carrier account
+                      example: USPS-B
+                    token:
+                      type: string
+                      description: The unique token of the carrier account
+                      example: ca_bc28f2e7_aaaa_4bbb_accc_bf7d9f2c27xx
+                    carrier:
+                      type: string
+                      description: The carrier type of the account (e.g., USPS, UPS, FedEx, DHL Express, etc.)
+                      example: USPS
+        '400':
+          $ref: "#/components/responses/InvalidTokenErrorResponse"
+
+  /api/balance:
+    get:
+      summary: Get Account Balance
+      description: |
+        Retrieves real-time account balance in USD.
+      tags:
+        - Account Management
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: string
+                    description: Account balance
+                    example: "173.13"
+                  currency:
+                    type: string
+                    description: Currency. Only USD is supported.
+                    example: "usd"
+        "400":
+          $ref: "#/components/responses/InvalidTokenErrorResponse"
+
+
+
+components:
+  securitySchemes:
+    ApiTokenAuth:
+      type: apiKey
+      in: query
+      name: api_token
+
+  schemas:
+    # 地址部分
+    street: 
+      type: string
+      example: "xxx Grand Avenue"
+    street2: 
+      type: string
+      description: Optional secondary address line (e.g., Apt, Suite, Unit, Floor).
+      example: "Apt 5B"
+    zipcode:
+      type: string
+      example: "90006"
+    city: 
+      type: string
+      example: "Los Angeles"
+    state: 
+      type: string
+      example: "CA"
+    country:
+      type: string
+      description: >
+        2-letter code for origin country. This field’s value
+        will be an [ISO 3166-1 two-digit code](https://en.wikipedia.org/wiki/ISO_3166-1).
+      example: "US"
+
+
+    ShipmentRequest:
+      type: object
+      required:
+        - from
+        - to
+        - shipments
+      properties:
+        carrier:
+          type: object
+          description: Carrier information
+          properties:
+            carrier_token:
+              type: string
+              description: Please refer to your ShipSaving account Carrier Accounts -> Token
+              example: ca_36f49ebbe91d4006a6583e17ceeec500
+        from:
+          type: object
+          description: Shipper's address
+          required:
+            - name  
+            - street
+            - city
+            - state
+            - zip
+            - country
+          properties:
+            name:
+              type: string
+              example: full name
+            company:
+              type: string
+              example:  company name
+            email:
+              type: string
+              example: xxx@gmail.com
+            phone:
+              type: string
+              description: Shipper's phone number. Required for international shipments.
+              example: 1237771234
+            street:
+              type: string
+              example: xxx Grand Ave
+            street2:
+              $ref: '#/components/schemas/street2'
+            city:
+              type: string
+              example: Los Angeles
+            state:
+              type: string
+              example: CA
+            zip:
+              type: string
+              example: 90018
+            country:
+              $ref: '#/components/schemas/country'
+        to:
+          type: object
+          description: Recipient's address
+          required:
+            - name    
+            - street
+            - city
+            - state
+            - zip
+            - country
+          properties:
+            name:
+              type: string
+              example: full name
+            company:
+              type: string
+              example:  company name
+            email:
+              type: string
+              example: xxx@gmail.com
+            phone:
+              type: string
+              description: Recipient's phone number. Required for international shipments.
+              example: 1237771234
+            street:
+              type: string
+              example: xxx Grand Ave
+            street2:
+              $ref: '#/components/schemas/street2'
+            city:
+              type: string
+              example: Los Angeles
+            state:
+              type: string
+              example: CA
+            zip:
+              type: string
+              example: 90018
+            country:
+              $ref: '#/components/schemas/country'
+            residential:
+              type: boolean
+              description: Whether the address is residential
+              example: true
+        shipments:
+          type: array
+          description: List of shipments
+          items:
+            type: object
+            required:
+              - length
+              - width
+              - height
+              - weight
+            properties:
+              length:
+                type: number
+                description: Package length (inch)
+                example: 6.00
+              width:
+                type: number
+                description: Package width (inch)
+                example: 6.00
+              height:
+                type: number
+                description: Package height (inch)
+                example: 6.00
+              weight:
+                type: number
+                description: Package weight (pound)
+                example: 1.00
+              packages:
+                type: array
+                items:
+                  type: string
+                  example: usps_small_flat_rate_box
+                description: >
+                  This field accepts carrier predefined packages.
+              insurance_amount:
+                type: number
+                format: float
+                description: >
+                  Amount for insured shipment. Must be used in conjunction with insurance_provider.
+                example: 120
+              custom_print1:
+                type: string
+                description: >
+                  Customized print on label.If the label itself supports custom printing content, this field will be printed onto the label.
+                example: "custom print1"
+              custom_print2:
+                type: string
+                description: >
+                  Customized print on label.If the label itself supports custom printing content, this field will be printed onto the label.
+                example: "custom print2"
+              contents:
+                type: array
+                description: > 
+                  List of items filed for customs (*required for international)
+                items:
+                  type: object
+                  required:
+                    - weight
+                    - description
+                    - quantity
+                    - value
+                    - origin_country
+                  properties:
+                    weight:
+                      type: number
+                      description: weight for each item
+                      example: 1
+                    description:
+                      type: string
+                      # TODO
+                    quantity:
+                      type: integer
+                      description: item quantity
+                    value:
+                      type: number
+                      description: item price
+                    hs_tariff_number:
+                      type: string
+                      description: tariff number
+                    origin_country:
+                      $ref: '#/components/schemas/country'
+        
+        order:
+          type: object
+          description: Order information
+          required:
+            - warehouse_name
+          properties:
+            warehouse_name:
+              type: string
+              description: Pre-existing warehouse name in ShipSaving system
+            store_name:
+              type: string
+              description: >
+                Pre-existing store name in ShipSaving system. (Please refer to your ShipSaving account Stores -> Stores Nickname. If you use order_number, then the store_name of the order is required)
+            order_number:
+              type: string
+              description: >
+                Pre-existing order number in ShipSaving system. If you need to check label price or buy a label for an order which already existed in our system, then this field is required.
+            status:
+              type: string
+              description: >
+                Used with order_number; sets order status (awaiting, hold, or shipped) after label purchase. Defaults to awaiting if omitted.
+            service_type:
+              type: string
+              description: >
+                Order parameter, service type: usps_ground_advantage, usps_priority_mail, etc.'
+            signature:
+              type: string
+              description: 'Order parameter: NO_SIGNATURE, SIGNATURE, or ADULT_SIGNATURE'
+            insurance_provider:
+              type: string
+              description: 'Order parameter: SHIPSURANCE or CARRIER. Used with the field insurance_amount.'
+            contents_type:
+              type: string
+              description: > 
+                Order parameter: package content type is GIFT, MERCHANDISE, SAMPLE, RETURNED_GOODS or DOCUMENTS'
+            non_delivery_option:
+              type: string
+              description: Defines the action to take for undeliverable shipments. Valid values are RETURN and ABANDON.
+              enum:
+                - RETURN
+                - ABANDON
+              example: RETURN
+            eel_pfc_type:
+              type: string
+              description: 'Order parameter: recipient exemption code or ITN: EXEMPTION_CODE,ITN'
+              enum:
+                - ITN
+                - EXEMPTION_CODE
+              example: ITN
+            eel_pfc_code:
+              type: string
+              description: 'Order parameter: recipient exemption code or ITN'
+            tax_ids:
+              type: array
+              description: "Order parameter, recipient\u2019s tax ID"
+              items:
+                type: object
+                properties:
+                  tax_id_type:
+                    type: string
+                    description: "tax_ids parameter, recipient\u2019s tax ID type (e.g., TIN,\
+                      \ EIN, SSN, VAT, etc.)"
+                  tax_id_number:
+                    type: string
+                    description: The value corresponding to the tax ID type
+                  tax_id_country:
+                    $ref: '#/components/schemas/country'
+        options:
+          type: object
+          description: Additional shipping options
+          properties:
+            ship_date:
+              type: string
+              description: >
+                *required for DHL rates. (The time is in ISO format with local time including the time zone. For example: 2024-02-07T10:55:56-08:00)
+            require_saturday_delivery:
+              type: boolean
+              description: Whether this shipment requires Saturday delivery
+            require_hazmat:
+              type: boolean
+              description: > 
+                Whether this shipment contains dangerous goods or hazardous materials (USPS Ground Advantage service only). View [tutorial](https://www.uspsdelivers.com/hazmat-shipping-safety/) about how to package, label and ship HAZMAT for domestic shipments.
+            label_type:
+              type: string
+              description: > 
+                The possible values are "pdf" or "png". If this parameter is not provided, the default value is "png".
+              enum: [png, pdf]
+                
+        recipient_tax_ids:
+          type: array
+          description: Recipient's tax information
+          items:
+            type: object
+            properties:
+              tax_id_type: 
+                type: string
+                description: recipient_tax_ids parameter，TIN，EIN，SSN， VAT，EORI，IOSS，PAN，VOEC
+              tax_id_number:
+                type: string
+                description: recipient_tax_ids parameter
+    RatingResponse:
+      type: object
+      properties:
+        rates:
+          type: array
+          description: List of shipment rates
+          items:
+            type: object
+            properties:
+              shipment_id:
+                type: string
+                description: Shipment ID
+              rate_id:
+                type: string
+                description: Rate ID
+              provider:
+                type: string
+                description: Carrier account provider, ShipSaving or user's own account
+              account_name:
+                type: string
+                description: Carrier account name
+              carrier:
+                type: string
+                description: Carrier, USPS, UPS, FEDEX, or DHL
+              service:
+                type: string
+                description: Carrier service
+              package:
+                type: string
+                description: My package or carrier predefined packages
+              delivery_days:
+                type: string
+                description: Course of traveling days to destination
+              published_rate:
+                type: number
+                format: float
+                description: Standard shipping rate before discount
+              rate:
+                type: number
+                format: float
+                description: Actual shipping rate after discount
+              rebate:
+                type: number
+                format: float
+                description: The saved shipping cost
+    CreateOrderRequest:  
+      type: object
+      required:
+        - store_name
+        - warehouse_name
+        - verify_address
+        - client_name
+        - client_street
+        - client_city
+        - client_state
+        - client_zip
+        - client_country
+        - shipments
+      properties:
+        store_name:
+          type: string
+          description: Store nickname as registered in your ShipSaving account (Stores > Stores Nickname).
+          example: "CS"
+
+        order_number:
+          type: string
+          description: Unique identifier for the order. If omitted, one will be generated automatically.
+          example: "202402071641"
+
+        warehouse_name:
+          type: string
+          description: Warehouse name as listed in your ShipSaving account (Warehouses > Warehouses name).
+          example: "WH"
+
+        verify_address:
+          type: boolean
+          description: Indicates whether the recipient address should be verified. 
+          example: true
+
+        client_name:
+          type: string
+          description: Full name of the recipient.
+          example: "full name"
+
+        client_company:
+          type: string
+          description: Company name of the recipient (if applicable).
+          example: "company name"
+
+        client_email:
+          type: string
+          description: Email address of the recipient.
+          example: ""
+
+        client_phone:
+          type: string
+          description: Phone number of the recipient. Required for international shipments.
+          example: "1234567890"
+
+        client_street:
+          type: string
+          description: Primary street address of the recipient.
+          example: "123 street name"
+
+        client_street2:
+          type: string
+          description: Secondary address line, such as apartment or suite number.
+          example: "apt 123"
+
+        client_city:
+          type: string
+          description: City of the recipient's address.
+          example: "city"
+
+        client_state:
+          type: string
+          description: State or province of the recipient's address.
+          example: "state"
+
+        client_zip:
+          type: string
+          description: ZIP or postal code of the recipient's address.
+          example: "zipcode"
+
+        client_country:
+          $ref: '#/components/schemas/country'
+          example: "US"
+
+        shipments:
+          type: array
+          description: List of shipment packages included in the order.
+          items:
+            type: object
+            properties:
+              length:
+                type: number
+                description: Length of the package in inches.
+                example: 6.00
+              width:
+                type: number
+                description: Width of the package in inches.
+                example: 6.00
+              height:
+                type: number
+                description: Height of the package in inches.
+                example: 3.00
+              weight:
+                type: number
+                description: Weight of the package in pounds.
+                example: 0.40
+              signature:
+                type: string
+                description: Signature requirement for delivery. 
+                enum:
+                  - NO_SIGNATURE
+                  - SIGNATURE
+                  - ADULT_SIGNATURE
+                example: "NO_SIGNATURE"
+              insurance_provider:
+                type: string
+                description: Insurance provider for the shipment.
+                enum:
+                  - SHIPSURANCE
+                  - CARRIER.
+                example: "SHIPSURANCE"
+              insurance_amount:
+                type: number
+                description: Value of insurance coverage in USD.
+                example: 200
+              custom_print1:
+                type: string
+                description: Custom text to appear on the first line of the shipping label.
+                example: "this is a custom print 1 field"
+              custom_print2:
+                type: string
+                description: Custom text to appear on the second line of the shipping label.
+                example: "this is a custom print 2 field"
+              items:
+                type: array
+                description: List of individual items in the package.
+                items:
+                  type: object
+                  required:
+                    - sku
+                    - quantity
+                    - price
+                  properties:
+                    sku:
+                      type: string
+                      description: Stock Keeping Unit (SKU) of the item.
+                      example: "2PCSFLCX-BLACK_PINK-S"
+                    title:
+                      type: string
+                      description: Descriptive title of the item.
+                      example: "2 t-shirts"
+                    quantity:
+                      type: integer
+                      description: Number of units for this item.
+                      example: 1
+                    price:
+                      type: number
+                      description: Unit price of the item.
+                      example: 20
+                    tax:
+                      type: number
+                      description: Sales tax per unit.
+                      example: 1.2
+                    shipping_cost:
+                      type: number
+                      description: Shipping cost allocated to the item.
+                      example: 10
+              notes:
+                type: array
+                description: Optional notes or instructions related to the shipment.
+                items:
+                  type: string
+                example:
+                  - "note 1"
+                  - "note 2"
+
+
+  responses:
+    BadRequestErrorResponse:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Error message
+                example: "missing or invalid parameters"
+    InvalidTokenErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Error Message
+                example: "Invalid token or account not found"
+    
+    ScanFormSuccessResponse:
+      description: Successfully retrieved manifest PDF URL
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              url:
+                type: string
+                format: uri
+                description: Manifest URL to the SCAN Form document (PDF)
+          example:
+            url: "https://.../forms/2024-11-01/12345667.pdf"
+    SCANFormErrorResponse:
+      description: Error message
+      content: 
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Error message
+            example:
+              message: "Invalid tracking code format or shipment not found."
