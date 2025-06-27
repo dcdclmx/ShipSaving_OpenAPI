@@ -18,8 +18,10 @@ paths:
     post:
       tags:
       - Label Purchase
-      summary: Retrieve shipping rates for a given package and address.
+      summary: 
+        Get Rate
       description: >
+        Retrieve shipping rates for a given package and address.
         **API usage limit:** 900 requests per minute.
       requestBody:
         required: true
@@ -50,7 +52,7 @@ paths:
     get:
       tags: 
       - Label Purchase
-      summary: Purchase shipping label
+      summary: Buy Label
       description: Purchase a shipping label based on the provided rate ID.
       operationId: purchaseLabel
       parameters:

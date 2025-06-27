@@ -33,8 +33,6 @@
 
     
     ## Appendix
-    👉 [Carrier Service Types Reference](carrier-services.html)</br>
-    👉 [Carrier Predefined Packages Reference](predefined_packages.html)
-
+   
 
     _Last updated: 2025-06-17_
