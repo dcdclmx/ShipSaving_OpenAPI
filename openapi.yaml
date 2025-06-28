@@ -94,7 +94,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ShipmentRequest'  # 假设你已将 requestBody 抽成了通用 schema
-      responses:
+      # responses:
         # '200':
         #   description: Label successfully purchased
         #   content:
