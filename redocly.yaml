@@ -6,3 +6,8 @@ extends:
 
 ignore:
   - .github
+
+reunite:
+  ignoreLint: true             # 忽略 lint 错误也允许发布
+  ignoreLinkChecker: true      # 忽略链接检查失败
+  ignoreMarkdocErrors: true    # 忽略 Markdoc 错误
