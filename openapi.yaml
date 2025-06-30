@@ -53,7 +53,9 @@ paths:
       tags: 
       - Label Management
       summary: Buy Label
-      description: Purchase a shipping label based on the provided rate ID.
+      description: |
+        Purchase a shipping label based on the provided rate ID.</br>
+        **API usage limit**: 1500 requests per minute
       operationId: purchaseLabel
       parameters:
         - name: rate_id
@@ -63,12 +65,12 @@ paths:
             type: string
           description: Unique identifier of the shipping rate.
       responses:
-        # '200':
-        #   description: Label successfully purchased.
-        #   content:
-        #     application/json:
-        #       schema:
-        #         $ref: '#/components/schemas/PurchaseLabelResponse'
+        '200':
+          description: Label successfully purchased.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseLabelResponse'
         '400':
           description: Invalid request or missing parameters.
           content:
@@ -88,26 +90,30 @@ paths:
         Purchases a shipping label directly without comparing multiple carrier options.
         This endpoint is applicable only when there is a single carrier configured for each carrier type in the user's account.
         If multiple carriers of the same type exist, use the Check Label Pricing List API to retrieve options, then call the Purchase Label API to complete the purchase.
+        </br>
+        **API usage limit**: 1500 requests per minute
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ShipmentRequest'  # 假设你已将 requestBody 抽成了通用 schema
-      # responses:
-        # '200':
-        #   description: Label successfully purchased
-        #   content:
-        #     application/json:
-        #       schema:
-        #         $ref: '#/components/schemas/PurchaseLabelResponse'
+      responses:
+        '200':
+          description: Label successfully purchased
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseLabelResponse'
 
 
   /api/shipments/void:
     post:
       summary: Void Label
       description: >
-        Voids a purchased shipping label using the shipment’s tracking number.
+        Voids a purchased shipping label using the shipment’s tracking number.  </br>
+        **API limit**: 300 requests per minute.
+        
       tags:
         - Label Management
       requestBody:
@@ -142,7 +148,8 @@ paths:
     post:
       summary: Create Orders
       description: |
-        Creates a new order in the ShipSaving system. Typically used to pre-create orders before generating shipping labels.
+        Creates a new order in the ShipSaving system. Typically used to pre-create orders before generating shipping labels.</br>
+        **API usage limit**: 300 requests per minute
       tags:
         - Order Management
       requestBody:
@@ -169,7 +176,8 @@ paths:
     get:
       summary: Check Order Labels
       description: >
-        Retrieves the shipment label details for a specified store and order number. Applicable only to orders with a purchased shipping label.
+        Retrieves the shipment label details for a specified store and order number. Applicable only to orders with a purchased shipping label.</br>
+        **API usage limit**: 300 requests per minute
       tags:
         - Order Management
       parameters:
@@ -341,7 +349,8 @@ paths:
     delete:
       summary: Delete an order
       description: >
-        Deletes an existing order from the ShipSaving system by specifying both the store name and order number. This action is irreversible and will permanently remove the order and its associated data.
+        Deletes an existing order from the ShipSaving system by specifying both the store name and order number. This action is irreversible and will permanently remove the order and its associated data.</br>
+        **API usage limit**: 300 requests per minute
       tags:
         - Order Management
       requestBody:
@@ -389,7 +398,9 @@ paths:
       summary: Address Verification
       description: |
         Verifies and standardizes an address based on the provided details.
-        This API checks for errors and returns suggestions or corrections.
+        This API checks for errors and returns suggestions or corrections. </br>
+        **API usage limit**: 300 requests per minute
+
       tags:
         - Address Verification
 
@@ -480,7 +491,8 @@ paths:
       summary: Create USPS SCAN Form
       description: |
         Creates a USPS SCAN Form for the provided list of shipment tracking codes. 
-        Only applicable to shipments with valid USPS tracking numbers.
+        Only applicable to shipments with valid USPS tracking numbers. </br>
+        **API limit**: 300 requests per minute.
 
       requestBody:
         required: true
@@ -502,7 +514,7 @@ paths:
                 - "9434611899562089592048"
       responses:
         "200":
-          $ref: "#/components/responses/ScanFormSuccessResponse"
+          $ref: "#/components/responses/SCANFormSuccessResponse"
         "400":
           $ref: "#/components/responses/SCANFormErrorResponse"
 
@@ -512,7 +524,8 @@ paths:
         - SCAN Form
       summary: Create DHL eCommerce SCAN Form
       description: >
-        Initiates the asynchronous creation of a DHL eCommerce SCAN Form. Returns a request ID that can be used with the Get DHL eCommerce SCAN Form endpoint to retrieve the final manifest PDF.
+        Initiates the asynchronous creation of a DHL eCommerce SCAN Form. Returns a request ID that can be used with the Get DHL eCommerce SCAN Form endpoint to retrieve the final manifest PDF.  </br>
+        **API limit**: 300 requests per minute.
 
       requestBody:
         required: true
@@ -557,7 +570,8 @@ paths:
         - SCAN Form
       summary: Get DHL eCommerce SCAN Form
       description: >
-        Returns the DHL eCommerce SCAN Form PDF URL based on the request ID from the creation endpoint.
+        Returns the DHL eCommerce SCAN Form PDF URL based on the request ID from the creation endpoint.  </br>
+        **API limit**: 300 requests per minute.
       parameters:
         - name: request_id
           in: query
@@ -567,7 +581,7 @@ paths:
           description: Request ID returned from the Create SCAN Form API
       responses:
         '200':
-          $ref: "#/components/responses/ScanFormSuccessResponse"
+          $ref: "#/components/responses/SCANFormSuccessResponse"
         '400':
           description: Bad Request - Invalid token or request ID
           content:
@@ -585,7 +599,8 @@ paths:
     get:
       summary: Get Carrier Account List
       description: |
-        Retrieves the list of carrier accounts associated with the authenticated API token.
+        Retrieves the list of carrier accounts associated with the authenticated API token.</br>
+        **API usage limit**: 100 requests per minute
       tags:
         - Carrier Management
       responses:
@@ -617,7 +632,8 @@ paths:
     get:
       summary: Get Account Balance
       description: |
-        Retrieves real-time account balance in USD.
+        Retrieves real-time account balance in USD.</br>
+        **API usage limit**: 100 requests per minute
       tags:
         - Account Management
       responses:
@@ -1233,6 +1249,258 @@ components:
                 example:
                   - "note 1"
                   - "note 2"
+  
+    PurchaseLabelResponse:
+      type: object
+      properties:
+        packing_slip_number:
+          type: integer
+          description: Packing slip number
+          example: 109169
+
+        master_tracking_code:
+          type: string
+          description: Master tracking code
+          example: ""
+
+        prefix_tracking_code:
+          type: string
+          description: Prefix tracking code
+          example: ""
+
+        tracking_code:
+          type: string
+          description: Tracking code
+          example: 1ZY50G652000880500
+
+        label_size:
+          type: string
+          description: Label size
+          example: 4x6
+
+        label_type:
+          type: string
+          description: Label type
+          example: label
+
+        length:
+          type: number
+          description: Package length
+          example: 12
+
+        width:
+          type: number
+          description: Package width
+          example: 12
+
+        height:
+          type: number
+          description: Package height
+          example: 7
+
+        weight:
+          type: number
+          description: Package weight
+          example: 14.99
+
+        insurance:
+          type: number
+          description: Insurance amount
+          example: 0
+
+        insurance_fee:
+          type: number
+          description: Insurance fee
+          example: 0
+
+        signature:
+          type: string
+          description: Signature option
+          example: NO_SIGNATURE
+
+        custom_print1:
+          type: string
+          description: Custom print line 1
+          example: ""
+
+        custom_print2:
+          type: string
+          description: Custom print line 2
+          example: ""
+
+        delivery_days:
+          type: string
+          description: Estimated delivery days
+          example: "1"
+
+        service_fee:
+          type: number
+          description: Additional service fee
+          example: 0.05
+
+        rate:
+          type: number
+          description: Shipping rate
+          example: 10.87
+
+        rebate:
+          type: number
+          description: Rate rebate
+          example: 0
+
+        from_name:
+          type: string
+          description: Sender's name
+          example: sender name
+
+        from_company:
+          type: string
+          description: Sender's company
+          example: ShipSaving, LLC
+
+        from_phone:
+          type: string
+          description: Sender's phone
+          example: ""
+
+        from_street:
+          type: string
+          description: Sender's address line 1
+          example: 769 Broadview Avenue
+
+        from_street2:
+          type: string
+          description: Sender's address line 2
+          example: ""
+
+        from_city:
+          type: string
+          description: Sender's city
+          example: Toronto
+
+        from_state:
+          type: string
+          description: Sender's state or province
+          example: ON
+
+        from_zip:
+          type: string
+          description: Sender's postal code
+          example: M4K 2P7
+
+        from_country:
+          type: string
+          description: Sender's country code
+          example: CA
+
+        to_name:
+          type: string
+          description: Recipient's name
+          example: ShipSaving
+
+        to_company:
+          type: string
+          description: Recipient's company
+          example: UPS Plus
+
+        to_phone:
+          type: string
+          description: Recipient's phone
+          example: ""
+
+        to_street:
+          type: string
+          description: Recipient's address line 1
+          example: 961 Broadview Avenue
+
+        to_street2:
+          type: string
+          description: Recipient's address line 2
+          example: ""
+
+        to_city:
+          type: string
+          description: Recipient's city
+          example: Toronto
+
+        to_state:
+          type: string
+          description: Recipient's state or province
+          example: ON
+
+        to_zip:
+          type: string
+          description: Recipient's postal code
+          example: M4K 2P7
+
+        to_country:
+          type: string
+          description: Recipient's country code
+          example: CA
+
+        label_status:
+          type: string
+          description: Label status
+          example: completed
+
+        shipment_id:
+          type: integer
+          description: Shipment ID
+          example: 1245627
+
+        warehouse_name:
+          type: string
+          description: Warehouse name
+          example: WH
+
+        store_name:
+          type: string
+          description: Store name
+          example: ""
+
+        order_number:
+          type: string
+          description: Order number
+          example: ""
+
+        provider:
+          type: string
+          description: Shipping provider
+          example: shipsaving
+
+        carrier:
+          type: string
+          description: Carrier code
+          example: UPS
+
+        service:
+          type: string
+          description: Service type
+          example: UPS_GROUND
+
+        package:
+          type: string
+          description: Package type
+          example: PACKAGE
+
+        published_rate:
+          type: number
+          description: Published carrier rate
+          example: 34.53
+
+        label_url:
+          type: array
+          description: Downloadable label URLs
+          items:
+            type: string
+          example:
+            - https://...../labels/2025-06-30/0231b055b64044e6b7e027874e915361_0.pdf
+
+        commercial_invoice_url:
+          type: string
+          nullable: true
+          description: Commercial invoice file URL
+          example: null
 
 
   responses:
@@ -1259,7 +1527,8 @@ components:
                 description: Error Message
                 example: "Invalid token or account not found"
     
-    ScanFormSuccessResponse:
+    
+    SCANFormSuccessResponse:
       description: Successfully retrieved manifest PDF URL
       content:
         application/json:

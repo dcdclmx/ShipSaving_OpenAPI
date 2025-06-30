@@ -1,3 +1,5 @@
+{% img src="./assets/banner.png" alt="Image description" withLightbox=true width="" height="" /%}
+
 ## Quick Start Guide
 Welcome to the ShipSaving API
 ShipSaving’s API offers a streamlined solution for integrating shipping capabilities directly into your application. With a single integration, you can access discounted rates from multiple carriers, create labels, track packages, schedule pickups, and more — all within one platform.
@@ -8,6 +10,7 @@ ShipSaving’s API offers a streamlined solution for integrating shipping capabi
 - Purchase and void shipping labels
 - Generate SCAN forms for USPS and DHL
 - Access account and carrier information
+
 
 {% card title="📝 Record of Updates" %}
 | Date       | Update                                                                 |
