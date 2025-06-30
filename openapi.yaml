@@ -17,11 +17,11 @@ paths:
   /api/rates/list:
     post:
       tags:
-      - Label Purchase
+      - Label Management
       summary: 
         Get Rate
       description: >
-        Retrieve shipping rates for a given package and address.
+        Retrieve shipping rates for a given package and address. </br>
         **API usage limit:** 900 requests per minute.
       requestBody:
         required: true
@@ -51,7 +51,7 @@ paths:
   /api/rates/buy:
     get:
       tags: 
-      - Label Purchase
+      - Label Management
       summary: Buy Label
       description: Purchase a shipping label based on the provided rate ID.
       operationId: purchaseLabel
@@ -82,7 +82,7 @@ paths:
   /api/rates/buy-label:
     post:
       tags: 
-        - Label Purchase
+        - Label Management
       summary: Directly Buy Label
       description: >
         Purchases a shipping label directly without comparing multiple carrier options.
@@ -270,6 +270,72 @@ paths:
                       example: null
         '400':
           $ref: "#/components/responses/BadRequestErrorResponse"
+
+  /api/shipments/tracking/info:
+    post:
+      summary: Get Shipment Tracking Information
+      description: |
+        Retrieve tracking information for multiple shipments. </br>
+        **API limit**: 300 requests per minute.
+      tags:
+        - Shipment Tracking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tracking_codes
+                - carrier_code
+              properties:
+                tracking_codes:
+                  type: array
+                  items:
+                    type: string
+                  description: List of shipment tracking codes
+                carrier_code:
+                  type: string
+                  description: Carrier code
+            example:
+              tracking_codes:
+                - "1ZX364H60231351890"
+                - "1Z0F843B0300003099"
+              carrier_code: "ups"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Shipment tracking status
+                    example: "IN_TRANSIT"
+                  location:
+                    type: object
+                    properties:
+                      city:
+                        type: string
+                        example: "Los Angeles"
+                      state:
+                        type: string
+                        example: "CA"
+                      country:
+                        type: string
+                        example: "US"
+        "400":
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
 
   /api/orders/delete:
     delete:
@@ -603,8 +669,7 @@ components:
     country:
       type: string
       description: >
-        2-letter code for origin country. This field’s value
-        will be an [ISO 3166-1 two-digit code](https://en.wikipedia.org/wiki/ISO_3166-1).
+        2-letter code for origin country. This field’s value will be an [ISO 3166-1 two-digit code](https://en.wikipedia.org/wiki/ISO_3166-1).
       example: "US"
 
 
@@ -740,7 +805,8 @@ components:
                   type: string
                   example: usps_small_flat_rate_box
                 description: >
-                  This field accepts carrier predefined packages.
+                  This field accepts carrier predefined packages. 
+                  Please refer to the **Predefined Carrier Packages Table** for supported values.
               insurance_amount:
                 type: number
                 format: float
@@ -772,20 +838,24 @@ components:
                   properties:
                     weight:
                       type: number
-                      description: weight for each item
+                      description: Weight of the item in lbs.
                       example: 1
                     description:
                       type: string
-                      # TODO
+                      description: Description of the item being shipped. Provide accurate and clear details for customs clearance.
+                      example: T-shirt
                     quantity:
                       type: integer
-                      description: item quantity
+                      description: Total number of identical items in this shipment entry.
+                      example: 2
                     value:
                       type: number
-                      description: item price
+                      description: Declared value of the item in USD.
+                      example: 29.99
                     hs_tariff_number:
                       type: string
-                      description: tariff number
+                      description: Harmonized System (HS) tariff code of the item.
+                      example: "610910"
                     origin_country:
                       $ref: '#/components/schemas/country'
         
@@ -797,7 +867,7 @@ components:
           properties:
             warehouse_name:
               type: string
-              description: Pre-existing warehouse name in ShipSaving system
+              description: Pre-existing warehouse name in ShipSaving system. (Please refer to your ShipSaving account Warehouses -> Name)
             store_name:
               type: string
               description: >
@@ -810,47 +880,72 @@ components:
               type: string
               description: >
                 Used with order_number; sets order status (awaiting, hold, or shipped) after label purchase. Defaults to awaiting if omitted.
+              enum:
+                - awaiting
+                - hold
+                - shipped
             service_type:
               type: string
               description: >
-                Order parameter, service type: usps_ground_advantage, usps_priority_mail, etc.'
+                Please refer to the **Carrier Service Types Table** for supported values.
             signature:
               type: string
-              description: 'Order parameter: NO_SIGNATURE, SIGNATURE, or ADULT_SIGNATURE'
+              enum: 
+                - NO_SIGNATURE
+                - SIGNATURE
+                - ADULT_SIGNATURE
             insurance_provider:
               type: string
-              description: 'Order parameter: SHIPSURANCE or CARRIER. Used with the field insurance_amount.'
+              description: Used with the field insurance_amount.
+              enum: 
+                - SHIPSURANCE
+                - CARRIER. 
             contents_type:
               type: string
-              description: > 
-                Order parameter: package content type is GIFT, MERCHANDISE, SAMPLE, RETURNED_GOODS or DOCUMENTS'
+              enum:
+                - GIFT
+                - MERCHANDISE
+                - SAMPLE
+                - RETURNED_GOODS
+                - DOCUMENTS
             non_delivery_option:
               type: string
-              description: Defines the action to take for undeliverable shipments. Valid values are RETURN and ABANDON.
+              description: Defines the action to take for undeliverable shipments. 
               enum:
                 - RETURN
                 - ABANDON
               example: RETURN
             eel_pfc_type:
               type: string
-              description: 'Order parameter: recipient exemption code or ITN: EXEMPTION_CODE,ITN'
+              description: |
+                Indicates the Electronic Export Information (EEI) filing method for this shipment.  
+                Use `ITN` if an Internal Transaction Number was issued after AES filing.  
+                Use `EXEMPTION_CODE` if the shipment qualifies for an EEI filing exemption.
               enum:
                 - ITN
                 - EXEMPTION_CODE
               example: ITN
             eel_pfc_code:
               type: string
-              description: 'Order parameter: recipient exemption code or ITN'
+              description: |
+                EEI filing identifier for this shipment.  
+                Provide either the Internal Transaction Number (ITN) received from AES,  
+                or the exemption code if EEI filing is not required (e.g., "NOEEI30.37(a)").
+              example: "X20250627012345"
             tax_ids:
               type: array
-              description: "Order parameter, recipient\u2019s tax ID"
+              description: |
+                recipient‘s taxid
               items:
                 type: object
                 properties:
                   tax_id_type:
                     type: string
-                    description: "tax_ids parameter, recipient\u2019s tax ID type (e.g., TIN,\
-                      \ EIN, SSN, VAT, etc.)"
+                    enum: 
+                      - TIN
+                      - EIN
+                      - SSN
+                      - VAT
                   tax_id_number:
                     type: string
                     description: The value corresponding to the tax ID type
@@ -863,20 +958,31 @@ components:
             ship_date:
               type: string
               description: >
-                *required for DHL rates. (The time is in ISO format with local time including the time zone. For example: 2024-02-07T10:55:56-08:00)
+                Timestamp in ISO 8601 format, including local time and time zone offset.
+              example: 2024-02-07T10:55:56-08:00
             require_saturday_delivery:
               type: boolean
               description: Whether this shipment requires Saturday delivery
+              example: false
             require_hazmat:
               type: boolean
               description: > 
                 Whether this shipment contains dangerous goods or hazardous materials (USPS Ground Advantage service only). View [tutorial](https://www.uspsdelivers.com/hazmat-shipping-safety/) about how to package, label and ship HAZMAT for domestic shipments.
+              example: false
             label_type:
               type: string
               description: > 
                 The possible values are "pdf" or "png". If this parameter is not provided, the default value is "png".
               enum: [png, pdf]
-                
+              example: png
+            require_qr_code:
+              type: boolean
+              description: > 
+                Indicates whether the shipping label should be generated as a QR code or barcode.  
+                Set to `true` to request a paperless label (e.g., QR code or barcode).  
+                Note: Availability of paperless labels depends on the carrier's support.
+              example: false
+
         recipient_tax_ids:
           type: array
           description: Recipient's tax information
@@ -885,7 +991,15 @@ components:
             properties:
               tax_id_type: 
                 type: string
-                description: recipient_tax_ids parameter，TIN，EIN，SSN， VAT，EORI，IOSS，PAN，VOEC
+                enum:
+                  - TIN
+                  - EIN
+                  - SSN
+                  - VAT
+                  - EORI
+                  - IOSS
+                  - PAN
+                  - VOEC
               tax_id_number:
                 type: string
                 description: recipient_tax_ids parameter
@@ -900,40 +1014,51 @@ components:
             properties:
               shipment_id:
                 type: string
-                description: Shipment ID
+                example: ship_bea6cc8c-27f8-4dcf-915e-f6aeed8c56e3
               rate_id:
                 type: string
-                description: Rate ID
+                example: rate_e50d02e2-047a-402c-aa32-22ad0926dbc0
               provider:
                 type: string
                 description: Carrier account provider, ShipSaving or user's own account
+                example: shipsaving
               account_name:
                 type: string
-                description: Carrier account name
+                example: USPS
               carrier:
                 type: string
                 description: Carrier, USPS, UPS, FEDEX, or DHL
+                example: USPS
               service:
                 type: string
-                description: Carrier service
+                example: USPS_GROUND_ADVANTAGE
+              service_type:
+                type: string
+                example: usps_ground_advantage
               package:
                 type: string
-                description: My package or carrier predefined packages
+                example: PACKAGE
+              package_type:
+                type: string
+                example: my_package
               delivery_days:
                 type: string
                 description: Course of traveling days to destination
+                example: 5
               published_rate:
                 type: number
                 format: float
                 description: Standard shipping rate before discount
+                example: 10.90
               rate:
                 type: number
                 format: float
                 description: Actual shipping rate after discount
+                example: 8.99
               rebate:
                 type: number
                 format: float
-                description: The saved shipping cost
+                example: 0.21
     CreateOrderRequest:  
       type: object
       required:

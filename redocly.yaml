@@ -1,6 +1,21 @@
 apis:
   main:
     root: ./openapi.yaml
+
+theme:
+  openapi:
+    hideDownloadButtons: true  # 隐藏右上角 Download OpenAPI 按钮
+    hideReplay: true
+
+logo:
+  image: "https://cdn.shipsaving.com/assets/icon/navbar/ic_logo_full.svg"
+  altText: ShipSaving
+  link: "https://www.shipsaving.com/"
+  favicon: "https://cdn.shipsaving.com/assets/icon/navbar/ic_settings.svg"
+
+mockServer:
+  off: true
+  
 extends:
   - minimal
 
