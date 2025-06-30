@@ -8,10 +8,10 @@ theme:
     hideReplay: true
 
 logo:
-  image: "https://cdn.shipsaving.com/assets/icon/navbar/ic_logo_full.svg"
-  altText: ShipSaving
+  srcSet: "./assets/logo_dark.svg light, ./assets/logo.svg dark"
+  altText: Ship Smarter, Save Bigger
   link: "https://www.shipsaving.com/"
-  favicon: "https://cdn.shipsaving.com/assets/icon/navbar/ic_settings.svg"
+  favicon: ./assets/favicon.svg
 
 mockServer:
   off: true
