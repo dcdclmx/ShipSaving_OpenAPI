@@ -6,7 +6,7 @@ theme:
   openapi:
     hideDownloadButtons: true  # 隐藏右上角 Download OpenAPI 按钮
     hideReplay: true
-
+    defaultSampleLanguage: 'Payload'
 logo:
   srcSet: "./assets/logo_dark.svg light, ./assets/logo.svg dark"
   altText: Ship Smarter, Save Bigger

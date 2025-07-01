@@ -38,16 +38,6 @@ paths:
               schema: 
                 $ref: '#/components/schemas/RatingResponse'
                 
-        '400':
-          description: Error retrieving rates
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    description: Error message
   /api/rates/buy:
     get:
       tags: 
@@ -71,16 +61,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PurchaseLabelResponse'
-        '400':
-          description: Invalid request or missing parameters.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    description: Error message
+
   /api/rates/buy-label:
     post:
       tags: 
@@ -89,7 +70,7 @@ paths:
       description: >
         Purchases a shipping label directly without comparing multiple carrier options.
         This endpoint is applicable only when there is a single carrier configured for each carrier type in the user's account.
-        If multiple carriers of the same type exist, use the Check Label Pricing List API to retrieve options, then call the Purchase Label API to complete the purchase.
+        If multiple carriers of the same type exist, use the Get Rate API to retrieve options, then call the Buy Label API to complete the purchase.
         </br>
         **API usage limit**: 1500 requests per minute
       requestBody:
@@ -169,8 +150,6 @@ paths:
                   order_number:
                     type: string
                     description: Order number
-        '400':
-          $ref: "#/components/responses/BadRequestErrorResponse"
 
   /api/shipments/get:
     get:
@@ -276,74 +255,6 @@ paths:
                         type: string
                       description: List of image URLs for commercial invoices (U.S. Letter)
                       example: null
-        '400':
-          $ref: "#/components/responses/BadRequestErrorResponse"
-
-  /api/shipments/tracking/info:
-    post:
-      summary: Get Shipment Tracking Information
-      description: |
-        Retrieve tracking information for multiple shipments. </br>
-        **API limit**: 300 requests per minute.
-      tags:
-        - Shipment Tracking
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - tracking_codes
-                - carrier_code
-              properties:
-                tracking_codes:
-                  type: array
-                  items:
-                    type: string
-                  description: List of shipment tracking codes
-                carrier_code:
-                  type: string
-                  description: Carrier code
-            example:
-              tracking_codes:
-                - "1ZX364H60231351890"
-                - "1Z0F843B0300003099"
-              carrier_code: "ups"
-      responses:
-        "200":
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    description: Shipment tracking status
-                    example: "IN_TRANSIT"
-                  location:
-                    type: object
-                    properties:
-                      city:
-                        type: string
-                        example: "Los Angeles"
-                      state:
-                        type: string
-                        example: "CA"
-                      country:
-                        type: string
-                        example: "US"
-        "400":
-          description: Error response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    description: Error message
 
   /api/orders/delete:
     delete:
@@ -515,8 +426,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/SCANFormSuccessResponse"
-        "400":
-          $ref: "#/components/responses/SCANFormErrorResponse"
 
   /api/shipments/scan-forms/dhl/ecommerce/create:
     post:
@@ -561,8 +470,6 @@ paths:
                 success-response:
                   value:
                     request: 202
-        '400':
-          $ref: "#/components/responses/SCANFormErrorResponse"
 
   /api/shipments/scan-forms/dhl/ecommerce/get:
     get:
@@ -582,18 +489,6 @@ paths:
       responses:
         '200':
           $ref: "#/components/responses/SCANFormSuccessResponse"
-        '400':
-          description: Bad Request - Invalid token or request ID
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    description: Error message
-              example:
-                message: "Invalid request_id or token."
 
   /api/carrier-account/list:
     get:
@@ -625,8 +520,6 @@ paths:
                       type: string
                       description: The carrier type of the account (e.g., USPS, UPS, FedEx, DHL Express, etc.)
                       example: USPS
-        '400':
-          $ref: "#/components/responses/InvalidTokenErrorResponse"
 
   /api/balance:
     get:
@@ -652,8 +545,6 @@ paths:
                     type: string
                     description: Currency. Only USD is supported.
                     example: "usd"
-        "400":
-          $ref: "#/components/responses/InvalidTokenErrorResponse"
 
 
 
@@ -786,7 +677,7 @@ components:
               $ref: '#/components/schemas/country'
             residential:
               type: boolean
-              description: Whether the address is residential
+              description: Specifies if the address is residential, which can impact the quoted shipping rate.
               example: true
         shipments:
           type: array
@@ -915,7 +806,7 @@ components:
               description: Used with the field insurance_amount.
               enum: 
                 - SHIPSURANCE
-                - CARRIER. 
+                - CARRIER
             contents_type:
               type: string
               enum:
@@ -930,7 +821,6 @@ components:
               enum:
                 - RETURN
                 - ABANDON
-              example: RETURN
             eel_pfc_type:
               type: string
               description: |
@@ -940,14 +830,19 @@ components:
               enum:
                 - ITN
                 - EXEMPTION_CODE
-              example: ITN
             eel_pfc_code:
               type: string
               description: |
                 EEI filing identifier for this shipment.  
                 Provide either the Internal Transaction Number (ITN) received from AES,  
-                or the exemption code if EEI filing is not required (e.g., "NOEEI30.37(a)").
-              example: "X20250627012345"
+                or the exemption code if EEI filing is not required.
+                examples:
+                  itn_example:
+                    summary: ITN number
+                    value: "X20250627012345"
+                  exemption_example:
+                    summary: Exemption code
+                    value: "NOEEI 30.37(a)"
             tax_ids:
               type: array
               description: |
@@ -985,6 +880,21 @@ components:
               description: > 
                 Whether this shipment contains dangerous goods or hazardous materials (USPS Ground Advantage service only). View [tutorial](https://www.uspsdelivers.com/hazmat-shipping-safety/) about how to package, label and ship HAZMAT for domestic shipments.
               example: false
+            hazmat_code:
+              type: string
+              description: >
+                Specifies the type of hazardous material for DHL eCommerce shipments.
+                This parameter must be used in conjunction with `options.require_hazmat` to take effect.
+              enum:
+                - dhlecs_lithium_metal_alloy_contained
+                - dhlecs_lithium_metal_alloy_packed
+                - dhlecs_lithium_metal_alloy_standalone
+                - dhlecs_lithium_ion_contained
+                - dhlecs_lithium_ion_packed
+                - dhlecs_lithium_ion_standalone
+                - dhlecs_limited_quantity
+                - dhlecs_small_quantity_provision
+                - dhlecs_limited_quantities_plt
             label_type:
               type: string
               description: > 
@@ -994,7 +904,7 @@ components:
             require_qr_code:
               type: boolean
               description: > 
-                Indicates whether the shipping label should be generated as a QR code or barcode.  
+                Indicates whether the shipping label should be generated as a normal label, QR code or barcode.  
                 Set to `true` to request a paperless label (e.g., QR code or barcode).  
                 Note: Availability of paperless labels depends on the carrier's support.
               example: false
@@ -1030,10 +940,10 @@ components:
             properties:
               shipment_id:
                 type: string
-                example: ship_bea6cc8c-27f8-4dcf-915e-f6aeed8c56e3
+                example: ship_bea6cc8c-27f8-4dcf-915e-f6aeed8c5600
               rate_id:
                 type: string
-                example: rate_e50d02e2-047a-402c-aa32-22ad0926dbc0
+                example: rate_e50d02e2-047a-402c-aa32-22ad0926db00
               provider:
                 type: string
                 description: Carrier account provider, ShipSaving or user's own account
@@ -1255,97 +1165,78 @@ components:
       properties:
         packing_slip_number:
           type: integer
-          description: Packing slip number
           example: 109169
 
         master_tracking_code:
           type: string
-          description: Master tracking code
           example: ""
 
         prefix_tracking_code:
           type: string
-          description: Prefix tracking code
           example: ""
 
         tracking_code:
           type: string
-          description: Tracking code
           example: 1ZY50G652000880500
 
         label_size:
           type: string
-          description: Label size
           example: 4x6
 
         label_type:
           type: string
-          description: Label type
           example: label
 
         length:
           type: number
-          description: Package length
           example: 12
 
         width:
           type: number
-          description: Package width
           example: 12
 
         height:
           type: number
-          description: Package height
           example: 7
 
         weight:
           type: number
-          description: Package weight
           example: 14.99
 
         insurance:
           type: number
-          description: Insurance amount
           example: 0
 
         insurance_fee:
           type: number
-          description: Insurance fee
           example: 0
 
         signature:
           type: string
-          description: Signature option
           example: NO_SIGNATURE
 
         custom_print1:
           type: string
-          description: Custom print line 1
           example: ""
 
         custom_print2:
           type: string
-          description: Custom print line 2
           example: ""
 
         delivery_days:
           type: string
-          description: Estimated delivery days
           example: "1"
 
         service_fee:
           type: number
-          description: Additional service fee
           example: 0.05
 
         rate:
           type: number
-          description: Shipping rate
           example: 10.87
 
         rebate:
           type: number
-          description: Rate rebate
           example: 0
 
         from_name:
@@ -1440,57 +1331,46 @@ components:
 
         label_status:
           type: string
-          description: Label status
           example: completed
 
         shipment_id:
           type: integer
-          description: Shipment ID
           example: 1245627
 
         warehouse_name:
           type: string
-          description: Warehouse name
           example: WH
 
         store_name:
           type: string
-          description: Store name
           example: ""
 
         order_number:
           type: string
-          description: Order number
           example: ""
 
         provider:
           type: string
-          description: Shipping provider
           example: shipsaving
 
         carrier:
           type: string
-          description: Carrier code
           example: UPS
 
         service:
           type: string
-          description: Service type
           example: UPS_GROUND
 
         package:
           type: string
-          description: Package type
           example: PACKAGE
 
         published_rate:
           type: number
-          description: Published carrier rate
           example: 34.53
 
         label_url:
           type: array
-          description: Downloadable label URLs
           items:
             type: string
           example:
@@ -1499,7 +1379,6 @@ components:
         commercial_invoice_url:
           type: string
           nullable: true
-          description: Commercial invoice file URL
           example: null
 
 
