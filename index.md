@@ -4,53 +4,41 @@
 Welcome to the ShipSaving API
 ShipSaving’s API offers a streamlined solution for integrating shipping capabilities directly into your application. With a single integration, you can access discounted rates from multiple carriers, create labels, track packages, schedule pickups, and more — all within one platform.
 
-### This API allows you to:
+### Key Features
 - Create and manage orders
 - Retrieve shipping rates
 - Purchase and void shipping labels
-- Generate SCAN forms for USPS and DHL
+- Generate SCAN forms for USPS and DHL eCommerce
 - Access account and carrier information
-
-
-{% card title="📝 Record of Updates" %}
-| Date       | Update                                                                 |
-|------------|------------------------------------------------------------------------|
-| 10/30/2024 | New API document                                                       |
-| 10/30/2024 | Change to new endpoint                                                 |
-| 10/30/2024 | Support check price list by Carrier Account                            |
-| 10/30/2024 | Standardize and optimize error responses                               |
-| 10/30/2024 | Add Get Account Balance interface                                      |
-| 10/30/2024 | Add/Create/Get DHL eCommerce SCAN Form interfaces                      |
-| 11/22/2024 | Add Get Carrier Account list interface                                 |
-| 02/21/2025 | Add `label_type` param (PDF & PNG) to pricing-related APIs             |
-| 02/21/2025 | Add 3 Canada Post service levels in Table 10                           |
-| 06/17/2025 | Add GOFO_EXPRESS in Table 1                                            |
-{% /card %}
 
 
 ###  API Integration Flow
 #### 👍 Option 1:
-1. Check Label Pricing List
-2. Purchase Label
+1. Get Rate
+2. Buy Label
 
 #### Option 2:
 1. Directly Buy Label
-💡 Limitation about this option: This interface is only applicable to you just have one same type carrier account, like one UPS account, one FEDEX account, one USPS account
 
+
+{% admonition type="info" name="Limitation" %}
+  This interface is only applicable to you just have one same type carrier account, like one UPS account, one FEDEX account, one USPS account
+{% /admonition %}
 #### Option 3 
 
 1. Create Orders
-2. Check Label Pricing List
-3. Purchase Label
-
-💡 Creating orders to our system is not required, you can keep your orders in your system
-
-
-  
-
+2. Get Rate
+3. Buy Label
+   
+{% admonition type="info" name="Info" %}
+  Creating orders to our system is not required, you can keep your orders in your system
+{% /admonition %}
 
 
-## Appendix
+
+
+
+### Appendix
 <details>
 <summary>📦 Click to expand Carrier Service Types Table</summary>
 
@@ -183,3 +171,19 @@ ShipSaving’s API offers a streamlined solution for integrating shipping capabi
 | DHL_EXPRESS | dhl_express_parcel |
 
 </details>
+
+
+### 📝 Release Notes
+| Date       | Update                                                                 |
+|------------|------------------------------------------------------------------------|
+| 10/30/2024 | New API document                                                       |
+| 10/30/2024 | Change to new endpoint                                                 |
+| 10/30/2024 | Support check price list by Carrier Account                            |
+| 10/30/2024 | Standardize and optimize error responses                               |
+| 10/30/2024 | Add Get Account Balance interface                                      |
+| 10/30/2024 | Add/Create/Get DHL eCommerce SCAN Form interfaces                      |
+| 11/22/2024 | Add Get Carrier Account list interface                                 |
+| 02/21/2025 | Add `label_type` param (PDF & PNG) to pricing-related APIs             |
+| 02/21/2025 | Add 3 Canada Post service levels in Table 10                           |
+| 06/17/2025 | Add GOFO_EXPRESS in Table 1                                            |
+| 06/30/2025 | Add `hazmat_code` to support various hazardous materials                 |
