@@ -775,6 +775,7 @@ components:
             warehouse_name:
               type: string
               description: Pre-existing warehouse name in ShipSaving system. (Please refer to your ShipSaving account Warehouses -> Name)
+              example: WH
             store_name:
               type: string
               description: >
@@ -795,6 +796,7 @@ components:
               type: string
               description: >
                 Please refer to the **Carrier Service Types Table** for supported values.
+              example: usps_ground_advantage
             signature:
               type: string
               enum: 
@@ -836,13 +838,13 @@ components:
                 EEI filing identifier for this shipment.  
                 Provide either the Internal Transaction Number (ITN) received from AES,  
                 or the exemption code if EEI filing is not required.
-                examples:
-                  itn_example:
-                    summary: ITN number
-                    value: "X20250627012345"
-                  exemption_example:
-                    summary: Exemption code
-                    value: "NOEEI 30.37(a)"
+              example:
+                itn_example:
+                  summary: ITN number
+                  value: "X20250627012345"
+                exemption_example:
+                  summary: Exemption code
+                  value: "NOEEI 30.37(a)"
             tax_ids:
               type: array
               description: |
