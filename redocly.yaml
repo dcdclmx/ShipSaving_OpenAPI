@@ -13,6 +13,9 @@ logo:
   link: "https://www.shipsaving.com/"
   favicon: ./assets/favicon.svg
 
+feedback: 
+  hide: true
+
 mockServer:
   off: true
   
