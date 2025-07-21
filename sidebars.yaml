@@ -1,0 +1,10 @@
+- page: index.md
+  label: Getting Started
+
+- page: ./openapi.yaml
+
+- page: appendix.md
+  label: Appendix
+
+- page: releasenotes.md
+  label: Release Notes
